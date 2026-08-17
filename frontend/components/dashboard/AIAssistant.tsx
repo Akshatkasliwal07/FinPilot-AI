@@ -1,1045 +1,580 @@
 "use client";
 
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
-  useCallback,
-  useState,
-} from "react";
-
-import {
-  BrainCircuit,
-  BarChart3,
-  Send,
-  Newspaper,
-  TrendingUp,
   Activity,
+  Bot,
+  BrainCircuit,
+  Send,
+  Sparkles,
+  User,
+  X,
 } from "lucide-react";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://127.0.0.1:8000";
 
-interface TechnicalAnalysis {
-  latest_close: number | null;
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
-  sma_20: number | null;
-  sma_50: number | null;
+interface ChatResponse {
+  reply: string;
+  market_context?: {
+    type?: string;
+    scan_time?: string;
+    market?: string;
+    interval?: string;
+    candidates?: MarketCandidate[];
+    stock?: MarketCandidate | null;
+    data_source?: string;
+  } | null;
+  timestamp: string;
+}
 
-  rsi_14: number | null;
-  rsi_signal: string;
-
-  macd: number | null;
-  macd_signal: number | null;
-  macd_histogram: number | null;
-
-  macd_direction: string;
-  macd_histogram_direction: string;
-
-  volatility_20d: number | null;
-
-  latest_volume: number | null;
-  volume_average_20d: number | null;
+interface MarketCandidate {
+  symbol: string;
+  price: number | null;
+  change_percent: number | null;
+  rsi: number | null;
+  ema20: number | null;
   volume_ratio: number | null;
-  volume_signal: string;
-
-  trend: string;
-
-  support: number | null;
-  resistance: number | null;
-
-  price_vs_sma20_percent: number | null;
-  price_vs_sma50_percent: number | null;
-
-  ema_20?: number | null;
+  score: number;
+  entry_reference: number | null;
+  illustrative_stop_loss: number | null;
+  illustrative_target: number | null;
+  latest_candle_time?: string | null;
+  data_source?: string;
 }
 
-interface AIAnalysis {
-  recommendation: string;
-  confidence: number;
-  reason: string;
+interface APIResult {
+  success?: boolean;
+  message?: string;
+  data?: ChatResponse;
+  error?: string;
+  detail?: string;
 }
 
-interface NewsArticle {
-  title: string;
-  source?: string;
-  published_at?: string;
-  url?: string;
-  sentiment?: string;
-}
-
-interface NewsResponse {
-  symbol: string;
-  overall_sentiment: string;
-  confidence: number;
-  articles: NewsArticle[];
-}
-
-interface LiveStock {
-  symbol: string;
-  price: string;
-  open: string;
-  high: string;
-  low: string;
-  volume: string;
-  previousClose: string;
-  change: string;
-  changePercent: string;
-  dataSource?: string;
-}
+const QUICK_PROMPTS = [
+  "What is the current market looking like?",
+  "Give me the top 10 stocks with strong current momentum.",
+  "Analyze TCS right now.",
+  "Which stocks should I watch for intraday today?",
+  "Explain RSI and how I should use it.",
+];
 
 export default function AIAssistant() {
-  const [symbol, setSymbol] =
-    useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content:
+        "Hello! I'm FinPilot AI. Ask me about stocks, the market, technical indicators, news, or current trading setups.",
+    },
+  ]);
 
-  const [stock, setStock] =
-    useState<LiveStock | null>(null);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [technicalAnalysis, setTechnicalAnalysis] =
-    useState<TechnicalAnalysis | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const [aiAnalysis, setAiAnalysis] =
-    useState<AIAnalysis | null>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, loading]);
 
-  const [news, setNews] =
-    useState<NewsArticle[]>([]);
+  function getAuthHeaders(): Record<string, string> {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("access_token")
+        : null;
 
-  const [loading, setLoading] =
-    useState(false);
+    const tokenType =
+      typeof window !== "undefined"
+        ? localStorage.getItem("token_type") || "bearer"
+        : "bearer";
 
-  const [error, setError] =
-    useState("");
+    if (!token) {
+      throw new Error(
+        "Please login before using FinPilot AI."
+      );
+    }
 
-  /*
-   * ---------------------------------------------------------
-   * SAFE JSON
-   * ---------------------------------------------------------
-   */
+    return {
+      "Content-Type": "application/json",
+      Authorization: `${tokenType} ${token}`,
+    };
+  }
 
-  const readJson = async (
+  async function readJson(
     response: Response
-  ) => {
+  ): Promise<APIResult | null> {
     try {
-      return await response.json();
+      return (await response.json()) as APIResult;
     } catch {
       return null;
     }
-  };
+  }
 
-  /*
-   * ---------------------------------------------------------
-   * FETCH LIVE STOCK
-   * ---------------------------------------------------------
-   */
+  async function sendMessage(
+    messageOverride?: string
+  ) {
+    const message = (
+      messageOverride ?? input
+    ).trim();
 
-  const fetchLiveStock = useCallback(
-    async (stockSymbol: string) => {
+    if (!message || loading) {
+      return;
+    }
+
+    setError("");
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: message,
+    };
+
+    const history = messages
+      .filter(
+        (item) =>
+          item.content.trim().length > 0
+      )
+      .slice(-12);
+
+    setMessages((previous) => [
+      ...previous,
+      userMessage,
+    ]);
+
+    setInput("");
+    setLoading(true);
+
+    try {
       const response = await fetch(
-        `${API_BASE_URL}/stocks/live/${encodeURIComponent(
-          stockSymbol
-        )}`,
+        `${API_BASE_URL}/ai/chat`,
         {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            message,
+            history,
+          }),
           cache: "no-store",
         }
       );
 
-      const result =
-        await readJson(response);
+      const result = await readJson(
+        response
+      );
 
       if (!response.ok) {
         throw new Error(
           result?.error ||
             result?.detail ||
             result?.message ||
-            `Unable to load ${stockSymbol}.`
+            `AI request failed (${response.status}).`
         );
       }
 
-      const data = result?.data;
-
-      if (!data) {
+      if (
+        result?.success === false
+      ) {
         throw new Error(
-          "Live stock data was not returned."
+          result.message ||
+            result.error ||
+            "FinPilot AI could not process the request."
         );
       }
 
-      return {
-        symbol:
-          data["01. symbol"] ??
-          stockSymbol,
-
-        open:
-          data["02. open"] ?? "—",
-
-        high:
-          data["03. high"] ?? "—",
-
-        low:
-          data["04. low"] ?? "—",
-
-        price:
-          data["05. price"] ?? "—",
-
-        volume:
-          data["06. volume"] ?? "0",
-
-        previousClose:
-          data["08. previous close"] ?? "—",
-
-        change:
-          data["09. change"] ?? "0",
-
-        changePercent:
-          data["10. change percent"] ?? "0%",
-
-        dataSource:
-          data["data_source"] ??
-          "Market Data",
-      } as LiveStock;
-    },
-    []
-  );
-
-  /*
-   * ---------------------------------------------------------
-   * FETCH TECHNICAL ANALYSIS
-   * ---------------------------------------------------------
-   */
-
-  const fetchTechnicalAnalysis =
-    useCallback(
-      async (stockSymbol: string) => {
-        const response = await fetch(
-          `${API_BASE_URL}/stocks/analysis/${encodeURIComponent(
-            stockSymbol
-          )}?period=3mo`,
-          {
-            cache: "no-store",
-          }
-        );
-
-        const result =
-          await readJson(response);
-
-        if (!response.ok) {
-          throw new Error(
-            result?.error ||
-              result?.detail ||
-              result?.message ||
-              "Technical analysis unavailable."
-          );
-        }
-
-        if (
-          result?.success !== true ||
-          !result?.data
-        ) {
-          throw new Error(
-            result?.message ||
-              "Technical analysis data unavailable."
-          );
-        }
-
-        return result.data as TechnicalAnalysis;
-      },
-      []
-    );
-
-  /*
-   * ---------------------------------------------------------
-   * FETCH STOCK NEWS
-   * ---------------------------------------------------------
-   */
-
-  const fetchStockNews =
-    useCallback(
-      async (stockSymbol: string) => {
-        try {
-          const response =
-            await fetch(
-              `${API_BASE_URL}/news/stock/${encodeURIComponent(
-                stockSymbol
-              )}?limit=10`,
-              {
-                cache: "no-store",
-              }
-            );
-
-          const result =
-            await readJson(response);
-
-          if (!response.ok) {
-            return [];
-          }
-
-          return (
-            result?.data?.articles ??
-            result?.articles ??
-            []
-          ) as NewsArticle[];
-        } catch (err) {
-          console.warn(
-            "News unavailable:",
-            err
-          );
-
-          return [];
-        }
-      },
-      []
-    );
-
-  /*
-   * ---------------------------------------------------------
-   * AI ANALYSIS
-   * ---------------------------------------------------------
-   */
-
-  const fetchAIAnalysis = useCallback(
-    async (
-      stockData: LiveStock,
-      technical: TechnicalAnalysis,
-      latestNews: NewsArticle[]
-    ) => {
-      const token =
-        localStorage.getItem(
-          "access_token"
-        );
-
-      const tokenType =
-        localStorage.getItem(
-          "token_type"
-        ) || "bearer";
-
-      if (!token) {
+      if (!result?.data?.reply) {
         throw new Error(
-          "Please login before using FinPilot AI."
+          "FinPilot AI returned an empty response."
         );
       }
 
-      const response =
-        await fetch(
-          `${API_BASE_URL}/ai/analyze`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `${tokenType} ${token}`,
-            },
-
-            body: JSON.stringify({
-              symbol:
-                stockData.symbol,
-
-              current_price:
-                Number(
-                  stockData.price
-                ),
-
-              technical_indicators: {
-                open:
-                  Number(
-                    stockData.open
-                  ),
-
-                high:
-                  Number(
-                    stockData.high
-                  ),
-
-                low:
-                  Number(
-                    stockData.low
-                  ),
-
-                previous_close:
-                  Number(
-                    stockData.previousClose
-                  ),
-
-                change:
-                  Number(
-                    stockData.change
-                  ),
-
-                change_percent:
-                  Number(
-                    String(
-                      stockData.changePercent
-                    ).replace("%", "")
-                  ),
-
-                volume:
-                  Number(
-                    stockData.volume
-                  ),
-
-                /*
-                 * IMPORTANT:
-                 * Send already calculated
-                 * technical indicators.
-                 */
-
-                rsi:
-                  technical.rsi_14,
-
-                sma20:
-                  technical.sma_20,
-
-                sma50:
-                  technical.sma_50,
-
-                ema20:
-                  technical.ema_20 ??
-                  null,
-
-                macd:
-                  technical.macd,
-
-                macd_signal:
-                  technical.macd_signal,
-
-                macd_histogram:
-                  technical.macd_histogram,
-
-                trend:
-                  technical.trend,
-
-                volatility_20d:
-                  technical.volatility_20d,
-
-                volume_ratio:
-                  technical.volume_ratio,
-
-                support:
-                  technical.support,
-
-                resistance:
-                  technical.resistance,
-
-                price_vs_sma20_percent:
-                  technical.price_vs_sma20_percent,
-
-                price_vs_sma50_percent:
-                  technical.price_vs_sma50_percent,
-              },
-
-              latest_news:
-                latestNews,
-            }),
-          }
-        );
-
-      const result =
-        await readJson(response);
-
-      if (!response.ok) {
-        throw new Error(
-          result?.error ||
-            result?.detail ||
-            result?.message ||
-            "AI analysis failed."
-        );
-      }
-
-      if (!result?.data) {
-        throw new Error(
-          "AI analysis returned no data."
-        );
-      }
-
-      return result.data as AIAnalysis;
-    },
-    []
-  );
-
-  /*
-   * ---------------------------------------------------------
-   * MAIN ANALYZE FUNCTION
-   * ---------------------------------------------------------
-   */
-
-  async function handleAnalyze() {
-    const cleanSymbol =
-      symbol
-        .trim()
-        .toUpperCase();
-
-    if (!cleanSymbol) {
-      setError(
-        "Enter a stock symbol first."
-      );
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError("");
-
-      setStock(null);
-      setTechnicalAnalysis(null);
-      setAiAnalysis(null);
-      setNews([]);
-
-      /*
-       * Load everything for the same stock.
-       */
-
-      const stockData =
-        await fetchLiveStock(
-          cleanSymbol
-        );
-
-      setStock(stockData);
-
-      const technical =
-        await fetchTechnicalAnalysis(
-          cleanSymbol
-        );
-
-      setTechnicalAnalysis(
-        technical
-      );
-
-      const latestNews =
-        await fetchStockNews(
-          cleanSymbol
-        );
-
-      setNews(
-        latestNews
-      );
-
-      /*
-       * Generate AI report using
-       * the same technical data.
-       */
-
-      const ai =
-        await fetchAIAnalysis(
-          stockData,
-          technical,
-          latestNews
-        );
-
-      setAiAnalysis(ai);
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content: result.data!.reply,
+        },
+      ]);
 
     } catch (err) {
       console.error(
-        "FinPilot AI error:",
+        "FinPilot chatbot error:",
         err
       );
 
-      setError(
+      const message =
         err instanceof Error
           ? err.message
-          : "Unable to analyze stock."
-      );
+          : "Unable to connect to FinPilot AI.";
+
+      setError(message);
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content:
+            "I couldn't process that request. Please check the backend connection and try again.",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   }
 
-  /*
-   * ---------------------------------------------------------
-   * ENTER KEY
-   * ---------------------------------------------------------
-   */
-
-  function handleKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>
+  function handleSubmit(
+    event: FormEvent<HTMLFormElement>
   ) {
-    if (e.key === "Enter") {
-      handleAnalyze();
-    }
+    event.preventDefault();
+    void sendMessage();
   }
 
-  /*
-   * ---------------------------------------------------------
-   * FORMAT HELPERS
-   * ---------------------------------------------------------
-   */
-
-  function formatValue(
-    value: number | null | undefined,
-    prefix = ""
+  function formatMarketCandidate(
+    candidate: MarketCandidate
   ) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(value)
-    ) {
-      return "—";
-    }
+    return (
+      <div
+        key={candidate.symbol}
+        className="rounded-2xl border border-white/10 bg-slate-950/50 p-4"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-bold text-white">
+              {candidate.symbol}
+            </p>
 
-    return `${prefix}${value.toFixed(2)}`;
-  }
+            <p className="text-xs text-slate-500">
+              Score: {candidate.score}
+            </p>
+          </div>
 
-  function formatVolume(
-    value:
-      | number
-      | null
-      | undefined
-  ) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(value)
-    ) {
-      return "—";
-    }
+          <div className="text-right">
+            <p className="font-semibold text-white">
+              {candidate.price !== null
+                ? `₹${candidate.price.toFixed(2)}`
+                : "—"}
+            </p>
 
-    return value.toLocaleString(
-      "en-IN"
+            <p
+              className={
+                (candidate.change_percent ?? 0) >= 0
+                  ? "text-sm text-emerald-400"
+                  : "text-sm text-red-400"
+              }
+            >
+              {candidate.change_percent !== null
+                ? `${candidate.change_percent >= 0 ? "+" : ""}${candidate.change_percent.toFixed(2)}%`
+                : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-xl bg-white/5 p-2">
+            <span className="text-slate-500">
+              RSI
+            </span>
+
+            <p className="mt-1 font-semibold text-white">
+              {candidate.rsi !== null
+                ? candidate.rsi.toFixed(2)
+                : "—"}
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-white/5 p-2">
+            <span className="text-slate-500">
+              Volume
+            </span>
+
+            <p className="mt-1 font-semibold text-white">
+              {candidate.volume_ratio !== null
+                ? `${candidate.volume_ratio.toFixed(2)}x`
+                : "—"}
+            </p>
+          </div>
+        </div>
+
+        {candidate.entry_reference !== null && (
+          <div className="mt-3 border-t border-white/5 pt-3 text-xs">
+            <div className="flex justify-between">
+              <span className="text-slate-500">
+                Reference
+              </span>
+
+              <span className="text-white">
+                ₹
+                {candidate.entry_reference.toFixed(
+                  2
+                )}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between">
+              <span className="text-slate-500">
+                Illustrative stop
+              </span>
+
+              <span className="text-red-300">
+                {candidate.illustrative_stop_loss !==
+                null
+                  ? `₹${candidate.illustrative_stop_loss.toFixed(2)}`
+                  : "—"}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between">
+              <span className="text-slate-500">
+                Illustrative target
+              </span>
+
+              <span className="text-emerald-300">
+                {candidate.illustrative_target !==
+                null
+                  ? `₹${candidate.illustrative_target.toFixed(2)}`
+                  : "—"}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
-  function recommendationClass() {
-    if (
-      aiAnalysis?.recommendation ===
-      "BUY"
-    ) {
-      return "text-emerald-400";
-    }
-
-    if (
-      aiAnalysis?.recommendation ===
-      "SELL"
-    ) {
-      return "text-red-400";
-    }
-
-    return "text-yellow-400";
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * UI
-   * ---------------------------------------------------------
-   */
-
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
 
       {/* HEADER */}
+      <div className="border-b border-white/10 bg-gradient-to-r from-blue-950/60 to-cyan-950/40 p-6">
 
-      <div className="flex items-start gap-4">
+        <div className="flex items-start justify-between gap-4">
 
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10">
-          <BrainCircuit className="h-6 w-6 text-cyan-400" />
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10">
+              <BrainCircuit className="h-6 w-6 text-cyan-400" />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">
+                  FinPilot Intelligence
+                </p>
+
+                <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-400">
+                  <Activity className="h-3 w-3" />
+                  AI ONLINE
+                </span>
+              </div>
+
+              <h2 className="mt-1 text-2xl font-bold text-white">
+                FinPilot AI Assistant
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-400">
+                Ask questions about stocks, markets,
+                technical analysis and trading setups.
+              </p>
+            </div>
+
+          </div>
+
         </div>
-
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">
-            FinPilot Intelligence
-          </p>
-
-          <h2 className="mt-1 text-2xl font-bold text-white">
-            AI Stock Analysis
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Analyze live market data, technical
-            indicators and recent stock news.
-          </p>
-        </div>
-
       </div>
 
-      {/* SEARCH */}
+      {/* QUICK QUESTIONS */}
+      <div className="border-b border-white/10 p-4">
 
-      <div className="mt-8 flex gap-3">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-cyan-400" />
 
-        <input
-          type="text"
-          value={symbol}
-          onChange={(e) =>
-            setSymbol(
-              e.target.value.toUpperCase()
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Quick questions
+          </p>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+
+          {QUICK_PROMPTS.map(
+            (prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  void sendMessage(prompt)
+                }
+                className="whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {prompt}
+              </button>
             )
-          }
-          onKeyDown={handleKeyDown}
-          placeholder="Enter symbol, e.g. TCS"
-          className="flex-1 rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500/50"
-        />
+          )}
 
-        <button
-          type="button"
-          onClick={handleAnalyze}
-          disabled={loading}
-          className="rounded-2xl bg-blue-600 p-3 text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Analyze stock"
-        >
-          <Send className="h-5 w-5" />
-        </button>
+        </div>
+      </div>
 
+      {/* CHAT */}
+      <div className="h-[560px] overflow-y-auto p-5">
+
+        <div className="space-y-5">
+
+          {messages.map(
+            (message, index) => {
+
+              const isUser =
+                message.role === "user";
+
+              return (
+                <div
+                  key={`${message.role}-${index}`}
+                  className={`flex gap-3 ${
+                    isUser
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+
+                  {!isUser && (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10">
+                      <Bot className="h-5 w-5 text-cyan-400" />
+                    </div>
+                  )}
+
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-7 ${
+                      isUser
+                        ? "rounded-br-md bg-blue-600 text-white"
+                        : "rounded-bl-md border border-white/10 bg-slate-900/70 text-slate-300"
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap">
+                      {message.content}
+                    </div>
+                  </div>
+
+                  {isUser && (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+                      <User className="h-5 w-5 text-blue-400" />
+                    </div>
+                  )}
+
+                </div>
+              );
+            }
+          )}
+
+          {/* LOADING */}
+          {loading && (
+            <div className="flex gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10">
+                <Bot className="h-5 w-5 text-cyan-400" />
+              </div>
+
+              <div className="rounded-2xl rounded-bl-md border border-white/10 bg-slate-900/70 px-5 py-4">
+
+                <div className="flex items-center gap-1">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400 [animation-delay:120ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400 [animation-delay:240ms]" />
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+
+        </div>
       </div>
 
       {/* ERROR */}
-
       {error && (
-        <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
-          {error}
-        </div>
-      )}
+        <div className="mx-5 mb-4 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
 
-      {/* LOADING */}
+          <X className="mt-0.5 h-4 w-4 shrink-0" />
 
-      {loading && (
-        <div className="mt-6 animate-pulse rounded-3xl border border-white/5 bg-slate-900/50 p-6">
-
-          <div className="h-5 w-40 rounded bg-slate-800" />
-
-          <div className="mt-5 h-12 w-52 rounded bg-slate-800" />
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-
-            <div className="h-24 rounded-2xl bg-slate-800" />
-
-            <div className="h-24 rounded-2xl bg-slate-800" />
-
-            <div className="h-24 rounded-2xl bg-slate-800" />
-
-            <div className="h-24 rounded-2xl bg-slate-800" />
-
-          </div>
-
-        </div>
-      )}
-
-      {/* RESULT */}
-
-      {aiAnalysis &&
-        technicalAnalysis &&
-        stock &&
-        !loading && (
-
-        <div className="mt-6 rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-950/60 to-slate-900/80 p-6">
-
-          {/* TITLE */}
-
-          <div className="flex items-center gap-3">
-
-            <Activity className="h-6 w-6 text-cyan-400" />
-
-            <h3 className="text-lg font-semibold text-cyan-300">
-              AI Stock Analysis
-            </h3>
-
-          </div>
-
-          {/* PRICE + RECOMMENDATION */}
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-
-            <div className="rounded-2xl bg-slate-950/40 p-5">
-
-              <p className="text-xs uppercase tracking-wider text-slate-500">
-                Current Price
-              </p>
-
-              <p className="mt-3 text-3xl font-extrabold text-white">
-                ₹
-                {stock.price}
-              </p>
-
-              <p
-                className={`mt-2 text-sm font-semibold ${
-                  Number(
-                    stock.change
-                  ) >= 0
-                    ? "text-emerald-400"
-                    : "text-red-400"
-                }`}
-              >
-                {Number(
-                  stock.change
-                ) >= 0
-                  ? "+"
-                  : ""}
-                {stock.change}{" "}
-                (
-                {stock.changePercent}
-                )
-              </p>
-
-            </div>
-
-            <div className="rounded-2xl bg-slate-950/40 p-5">
-
-              <p className="text-xs uppercase tracking-wider text-slate-500">
-                AI Recommendation
-              </p>
-
-              <p
-                className={`mt-3 text-3xl font-extrabold ${recommendationClass()}`}
-              >
-                {
-                  aiAnalysis.recommendation
-                }
-              </p>
-
-            </div>
-
-          </div>
-
-          {/* CONFIDENCE */}
-
-          <div className="mt-6">
-
-            <div className="flex items-center justify-between">
-
-              <p className="text-sm text-slate-400">
-                AI Confidence
-              </p>
-
-              <p className="font-bold text-white">
-                {
-                  aiAnalysis.confidence
-                }
-                %
-              </p>
-
-            </div>
-
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-              <div
-                className="h-full rounded-full bg-blue-500 transition-all duration-700"
-                style={{
-                  width: `${Math.min(
-                    Math.max(
-                      aiAnalysis.confidence,
-                      0
-                    ),
-                    100
-                  )}%`,
-                }}
-              />
-
-            </div>
-
-          </div>
-
-          {/* TECHNICAL INDICATORS */}
-
-          <div className="mt-8">
-
-            <div className="flex items-center gap-3">
-
-              <BarChart3 className="h-5 w-5 text-blue-400" />
-
-              <h3 className="font-semibold text-white">
-                Technical Indicators
-              </h3>
-
-            </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-
-              <Indicator
-                label="RSI (14)"
-                value={formatValue(
-                  technicalAnalysis.rsi_14
-                )}
-                sub={
-                  technicalAnalysis.rsi_signal
-                }
-              />
-
-              <Indicator
-                label="SMA 20"
-                value={formatValue(
-                  technicalAnalysis.sma_20,
-                  "₹"
-                )}
-                sub={
-                  technicalAnalysis.price_vs_sma20_percent !==
-                  null
-                    ? `Price vs SMA: ${technicalAnalysis.price_vs_sma20_percent.toFixed(
-                        2
-                      )}%`
-                    : "—"
-                }
-              />
-
-              <Indicator
-                label="SMA 50"
-                value={formatValue(
-                  technicalAnalysis.sma_50,
-                  "₹"
-                )}
-                sub={
-                  technicalAnalysis.price_vs_sma50_percent !==
-                  null
-                    ? `Price vs SMA: ${technicalAnalysis.price_vs_sma50_percent.toFixed(
-                        2
-                      )}%`
-                    : "—"
-                }
-              />
-
-              <Indicator
-                label="MACD"
-                value={formatValue(
-                  technicalAnalysis.macd
-                )}
-                sub={
-                  technicalAnalysis.macd_direction
-                }
-              />
-
-              <Indicator
-                label="MACD Signal"
-                value={formatValue(
-                  technicalAnalysis.macd_signal
-                )}
-                sub={
-                  technicalAnalysis.macd_histogram !==
-                  null
-                    ? `Histogram: ${technicalAnalysis.macd_histogram.toFixed(
-                        2
-                      )}`
-                    : "—"
-                }
-              />
-
-              <Indicator
-                label="Volatility (20D)"
-                value={formatValue(
-                  technicalAnalysis.volatility_20d,
-                  ""
-                )}
-                sub="20-day volatility"
-              />
-
-              <Indicator
-                label="Volume"
-                value={formatVolume(
-                  technicalAnalysis.latest_volume
-                )}
-                sub={
-                  technicalAnalysis.volume_signal ||
-                  "—"
-                }
-              />
-
-              <Indicator
-                label="Trend"
-                value={
-                  technicalAnalysis.trend ||
-                  "NEUTRAL"
-                }
-                sub="Overall market trend"
-              />
-
-              <Indicator
-                label="Support"
-                value={formatValue(
-                  technicalAnalysis.support,
-                  "₹"
-                )}
-                sub="Reference level"
-              />
-
-              <Indicator
-                label="Resistance"
-                value={formatValue(
-                  technicalAnalysis.resistance,
-                  "₹"
-                )}
-                sub="Reference level"
-              />
-
-            </div>
-
-          </div>
-
-          {/* NEWS */}
-
-          <div className="mt-8 flex items-center gap-3">
-
-            <Newspaper className="h-5 w-5 text-slate-400" />
-
-            <p className="text-sm text-slate-300">
-              {news.length} latest news article
-              {news.length === 1
-                ? ""
-                : "s"} analyzed
-            </p>
-
-          </div>
-
-          {/* REASONING */}
-
-          <div className="mt-6 rounded-2xl bg-slate-950/40 p-5">
-
-            <div className="flex items-center gap-3">
-
-              <TrendingUp className="h-5 w-5 text-cyan-400" />
-
-              <h3 className="font-semibold text-white">
-                AI Reasoning
-              </h3>
-
-            </div>
-
-            <p className="mt-4 leading-7 text-slate-300">
-              {
-                aiAnalysis.reason
-              }
-            </p>
-
-          </div>
-
-          {/* DISCLAIMER */}
-
-          <p className="mt-5 text-xs leading-5 text-slate-600">
-            AI analysis is generated from available
-            market data and is intended for research
-            and educational purposes only. It is not
-            personalized financial advice or a
-            guarantee of future returns.
+          <p>
+            {error}
           </p>
 
         </div>
       )}
 
-    </div>
-  );
-}
+      {/* INPUT */}
+      <form
+        onSubmit={handleSubmit}
+        className="border-t border-white/10 bg-slate-950/40 p-4"
+      >
 
-/*
- * ============================================================
- * INDICATOR CARD
- * ============================================================
- */
+        <div className="flex items-end gap-3">
 
-function Indicator({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-950/40 p-5">
+          <textarea
+            value={input}
+            onChange={(event) =>
+              setInput(event.target.value)
+            }
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey
+              ) {
+                event.preventDefault();
 
-      <p className="text-xs uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
+                void sendMessage();
+              }
+            }}
+            placeholder="Ask FinPilot AI anything..."
+            rows={2}
+            disabled={loading}
+            className="min-h-[56px] flex-1 resize-none rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-500/40 disabled:opacity-50"
+          />
 
-      <p className="mt-2 text-2xl font-bold text-white">
-        {value}
-      </p>
+          <button
+            type="submit"
+            disabled={
+              loading ||
+              !input.trim()
+            }
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Send message"
+          >
+            <Send className="h-5 w-5" />
+          </button>
 
-      <p className="mt-1 text-xs text-slate-500">
-        {sub}
-      </p>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-600">
+
+          <span>
+            Enter to send · Shift + Enter for new line
+          </span>
+
+          <span>
+            Market data may be delayed
+          </span>
+
+        </div>
+
+      </form>
+
+      {/* DISCLAIMER */}
+      <div className="border-t border-yellow-500/10 bg-yellow-500/5 px-5 py-4 text-xs leading-5 text-yellow-300/70">
+        FinPilot AI provides research and educational
+        analysis. Market prices can change rapidly.
+        Any entry, stop-loss or target shown by the AI is
+        illustrative and is not a guaranteed trading signal
+        or personalized financial advice.
+      </div>
 
     </div>
   );
