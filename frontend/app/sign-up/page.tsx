@@ -83,7 +83,7 @@ export default function SignUpPage() {
 
       const response =
         await fetch(
-          "http://127.0.0.1:8000/users/signup",
+          "https://finpilot-ai-q4nk.onrender.com/users/signup",
           {
             method: "POST",
 

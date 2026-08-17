@@ -13,7 +13,7 @@ import {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -258,8 +258,8 @@ export default function AIAssistant() {
           <div className="text-right">
             <p className="font-semibold text-white">
               {candidate.price !== null
-                ? `₹${candidate.price.toFixed(2)}`
-                : "—"}
+                ? `â‚¹${candidate.price.toFixed(2)}`
+                : "â€”"}
             </p>
 
             <p
@@ -271,7 +271,7 @@ export default function AIAssistant() {
             >
               {candidate.change_percent !== null
                 ? `${candidate.change_percent >= 0 ? "+" : ""}${candidate.change_percent.toFixed(2)}%`
-                : "—"}
+                : "â€”"}
             </p>
           </div>
         </div>
@@ -285,7 +285,7 @@ export default function AIAssistant() {
             <p className="mt-1 font-semibold text-white">
               {candidate.rsi !== null
                 ? candidate.rsi.toFixed(2)
-                : "—"}
+                : "â€”"}
             </p>
           </div>
 
@@ -297,7 +297,7 @@ export default function AIAssistant() {
             <p className="mt-1 font-semibold text-white">
               {candidate.volume_ratio !== null
                 ? `${candidate.volume_ratio.toFixed(2)}x`
-                : "—"}
+                : "â€”"}
             </p>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function AIAssistant() {
               </span>
 
               <span className="text-white">
-                ₹
+                â‚¹
                 {candidate.entry_reference.toFixed(
                   2
                 )}
@@ -325,8 +325,8 @@ export default function AIAssistant() {
               <span className="text-red-300">
                 {candidate.illustrative_stop_loss !==
                 null
-                  ? `₹${candidate.illustrative_stop_loss.toFixed(2)}`
-                  : "—"}
+                  ? `â‚¹${candidate.illustrative_stop_loss.toFixed(2)}`
+                  : "â€”"}
               </span>
             </div>
 
@@ -338,8 +338,8 @@ export default function AIAssistant() {
               <span className="text-emerald-300">
                 {candidate.illustrative_target !==
                 null
-                  ? `₹${candidate.illustrative_target.toFixed(2)}`
-                  : "—"}
+                  ? `â‚¹${candidate.illustrative_target.toFixed(2)}`
+                  : "â€”"}
               </span>
             </div>
           </div>
@@ -556,7 +556,7 @@ export default function AIAssistant() {
         <div className="mt-3 flex items-center justify-between text-[11px] text-slate-600">
 
           <span>
-            Enter to send · Shift + Enter for new line
+            Enter to send Â· Shift + Enter for new line
           </span>
 
           <span>

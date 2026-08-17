@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 interface MarketIndex {
   symbol: string;
@@ -237,10 +237,10 @@ export default function DashboardCards() {
       value: nifty?.price ?? 0,
       displayValue: nifty
         ? formatPrice(nifty.price)
-        : "—",
+        : "â€”",
       change: nifty
         ? formatPercent(niftyChange)
-        : "—",
+        : "â€”",
       subtitle: "Live Market Index",
       icon:
         niftyChange >= 0
@@ -261,10 +261,10 @@ export default function DashboardCards() {
       value: sensex?.price ?? 0,
       displayValue: sensex
         ? formatPrice(sensex.price)
-        : "—",
+        : "â€”",
       change: sensex
         ? formatPercent(sensexChange)
-        : "—",
+        : "â€”",
       subtitle: "Live Market Index",
       icon:
         sensexChange >= 0
@@ -345,11 +345,11 @@ export default function DashboardCards() {
                       "NIFTY 50" ||
                     card.title ===
                       "SENSEX"
-                      ? "₹"
+                      ? "â‚¹"
                       : ""}
 
                     {card.displayValue ??
-                      "—"}
+                      "â€”"}
                   </h2>
 
                   <div className="mt-4 flex items-center gap-2">

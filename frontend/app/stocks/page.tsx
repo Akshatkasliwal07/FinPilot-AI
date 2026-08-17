@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 interface Stock {
   id: number;
@@ -415,7 +415,7 @@ export default function StocksPage() {
                             marginTop: "6px",
                           }}
                         >
-                          ₹{live.price}
+                          â‚¹{live.price}
                         </div>
 
                         <div
@@ -479,7 +479,7 @@ export default function StocksPage() {
                                 marginTop: "4px",
                               }}
                             >
-                              ₹{value}
+                              â‚¹{value}
                             </div>
                           </div>
                         ))}
@@ -557,7 +557,7 @@ export default function StocksPage() {
                     >
                       {stock.sector ||
                         "Market"}{" "}
-                      • {stock.exchange || "NSE"}
+                      â€¢ {stock.exchange || "NSE"}
                     </div>
 
                     <Link
@@ -570,7 +570,7 @@ export default function StocksPage() {
                         fontSize: "13px",
                       }}
                     >
-                      View Details →
+                      View Details â†’
                     </Link>
                   </div>
                 </div>

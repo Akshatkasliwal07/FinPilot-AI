@@ -14,7 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 interface PortfolioItem {
   id: number;
@@ -161,7 +161,7 @@ export default function PortfolioChart() {
         </p>
 
         <h2 className="mt-3 text-4xl font-bold">
-          ₹0.00
+          â‚¹0.00
         </h2>
 
         <p className="mt-2 text-slate-500">
@@ -205,7 +205,7 @@ export default function PortfolioChart() {
           </p>
 
           <h2 className="mt-3 text-4xl font-bold">
-            ₹
+            â‚¹
             {summary.current_value.toLocaleString(
               "en-IN",
               {
@@ -222,8 +222,8 @@ export default function PortfolioChart() {
                 : "text-red-400"
             }`}
           >
-            {positive ? "▲" : "▼"}{" "}
-            ₹
+            {positive ? "â–²" : "â–¼"}{" "}
+            â‚¹
             {Math.abs(
               summary.profit_loss
             ).toLocaleString(
@@ -249,7 +249,7 @@ export default function PortfolioChart() {
           </p>
 
           <h3 className="text-2xl font-bold">
-            ₹
+            â‚¹
             {summary.total_invested.toLocaleString(
               "en-IN",
               {
@@ -317,7 +317,7 @@ export default function PortfolioChart() {
 
             <Tooltip
               formatter={(value) =>
-                `₹${Number(
+                `â‚¹${Number(
                   value
                 ).toLocaleString(
                   "en-IN"

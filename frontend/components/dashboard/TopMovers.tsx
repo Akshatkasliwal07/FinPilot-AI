@@ -48,7 +48,7 @@ const stocks = [
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 export default function TopMovers() {
   const [marketData, setMarketData] =
@@ -351,7 +351,7 @@ export default function TopMovers() {
       return "--";
     }
 
-    return `₹${value.toLocaleString(
+    return `â‚¹${value.toLocaleString(
       "en-IN",
       {
         minimumFractionDigits: 2,
@@ -374,7 +374,7 @@ export default function TopMovers() {
       return "--";
     }
 
-    return `${value >= 0 ? "+" : ""}₹${Math.abs(
+    return `${value >= 0 ? "+" : ""}â‚¹${Math.abs(
       value
     ).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
@@ -473,7 +473,7 @@ export default function TopMovers() {
             </p>
 
             <p className="mt-1 text-xs text-slate-600">
-              NSE • India
+              NSE â€¢ India
             </p>
           </div>
         </div>
@@ -543,7 +543,7 @@ export default function TopMovers() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-400">
-            Indian market • NSE
+            Indian market â€¢ NSE
           </p>
         </div>
 

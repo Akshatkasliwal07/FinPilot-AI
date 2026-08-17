@@ -1,6 +1,6 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 async function apiRequest<T>(
   endpoint: string,

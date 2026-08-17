@@ -62,7 +62,7 @@ export default function MarketHeatmap() {
       const results = await Promise.all(
         stocks.map(async (stock) => {
           const response = await fetch(
-            `http://127.0.0.1:8000/stocks/live/${stock.symbol}`,
+            `https://finpilot-ai-q4nk.onrender.com/stocks/live/${stock.symbol}`,
             {
               cache: "no-store",
             }
@@ -261,7 +261,7 @@ export default function MarketHeatmap() {
           </div>
 
           <p className="mt-5 text-right text-xs text-slate-600">
-            Market data • Auto-refreshes every 5 minutes
+            Market data â€¢ Auto-refreshes every 5 minutes
           </p>
         </>
       )}

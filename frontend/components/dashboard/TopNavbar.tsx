@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 // ============================================================
 // TYPES
@@ -945,7 +945,7 @@ export default function TopNavbar() {
                               text-slate-500
                             "
                           >
-                            View →
+                            View â†’
                           </span>
                         </button>
                       )
@@ -1135,7 +1135,7 @@ export default function TopNavbar() {
                           {formatIndexPrice(
                             nifty.price
                           )}{" "}
-                          •{" "}
+                          â€¢{" "}
                           {(
                             nifty.change_percent ??
                             0
@@ -1193,7 +1193,7 @@ export default function TopNavbar() {
                           {formatIndexPrice(
                             sensex.price
                           )}{" "}
-                          •{" "}
+                          â€¢{" "}
                           {(
                             sensex.change_percent ??
                             0

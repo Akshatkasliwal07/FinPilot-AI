@@ -17,7 +17,7 @@ import {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 interface PriceAlert {
   id: number;
@@ -631,7 +631,7 @@ export default function PriceAlerts() {
                         {" "}
 
                         <span className="font-medium text-slate-200">
-                          ₹
+                          â‚¹
                           {alert.target_price.toLocaleString(
                             "en-IN",
                             {

@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:8000";
+  "https://finpilot-ai-q4nk.onrender.com";
 
 // ============================================================
 // TYPES
@@ -681,7 +681,7 @@ export default function StockSearch() {
       return "--";
     }
 
-    return `₹${value.toLocaleString(
+    return `â‚¹${value.toLocaleString(
       "en-IN",
       {
         minimumFractionDigits: 2,
@@ -855,7 +855,7 @@ export default function StockSearch() {
           <p className="mt-1 text-xs text-slate-500">
             India
             {stock.currency
-              ? ` • ${stock.currency}`
+              ? ` â€¢ ${stock.currency}`
               : ""}
           </p>
         </div>
@@ -1015,7 +1015,7 @@ export default function StockSearch() {
             0 && (
             <p className="px-2 pt-2 text-xs text-slate-500">
               Click a stock to open
-              full live details →
+              full live details â†’
             </p>
           )}
         </div>
