@@ -1,10 +1,8 @@
 from pathlib import Path
 
-from ai.agents.pdf_rag_agent import answer_pdf_question
 from ai.chains import chat_with_finpilot
 from ai.langgraph.workflow import graph
 from ai.models.response import error_response, success_response
-from ai.rag import index_pdf
 
 
 def run_stock_research(user_query: str) -> dict:
@@ -62,8 +60,8 @@ def index_uploaded_pdf(
     Never accept a raw filesystem path directly from the frontend.
     """
     try:
+        from ai.rag import index_pdf
         return index_pdf(server_file_path)
-
     except Exception as error:
         return error_response(str(error))
 
@@ -75,7 +73,9 @@ def ask_uploaded_pdf(
     """
     Answer a question using only one indexed PDF.
     """
+    from ai.agents.pdf_rag_agent import answer_pdf_question
     return answer_pdf_question(
         question=question,
         source=source,
     )
+
