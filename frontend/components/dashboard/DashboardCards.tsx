@@ -341,16 +341,12 @@ export default function DashboardCards() {
                   </p>
 
                   <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white">
-                    {card.title ===
-                      "NIFTY 50" ||
-                    card.title ===
-                      "SENSEX"
-                      ? "â‚¹"
-                      : ""}
+  {card.title === "NIFTY 50" || card.title === "SENSEX"
+    ? "₹"
+    : ""}
 
-                    {card.displayValue ??
-                      "â€”"}
-                  </h2>
+  {card.displayValue ?? "--"}
+</h2>
 
                   <div className="mt-4 flex items-center gap-2">
                     <span
