@@ -681,7 +681,7 @@ export default function StockSearch() {
       return "--";
     }
 
-    return `â‚¹${value.toLocaleString(
+    return `\u20B9${value.toLocaleString(
       "en-IN",
       {
         minimumFractionDigits: 2,

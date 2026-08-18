@@ -186,12 +186,14 @@ function formatCandleDate(timestamp: number, interval: Interval) {
 }
 
 function formatPrice(value: number | null | undefined) {
-  if (value == null || !Number.isFinite(value)) return "Gé¦--";
+  if (value == null || !Number.isFinite(value)) {
+  return "\u20B9--";
+}
 
-  return `Gé¦${value.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+return `\u20B9${value.toLocaleString("en-IN", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})}`;
 }
 
 function formatVolume(value: number | null | undefined) {
