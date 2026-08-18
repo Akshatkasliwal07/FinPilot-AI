@@ -186,9 +186,9 @@ function formatCandleDate(timestamp: number, interval: Interval) {
 }
 
 function formatPrice(value: number | null | undefined) {
-  if (value == null || !Number.isFinite(value)) return "Gé¦--";
+  if (value == null || !Number.isFinite(value)) return "GÃ©Â¦--";
 
-  return `Gé¦${value.toLocaleString("en-IN", {
+  return `GÃ©Â¦${value.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -1253,7 +1253,7 @@ export default function StockDetailsPage() {
           href="/stocks"
           className="text-sm font-medium text-blue-400 hover:text-blue-300"
         >
-          GåÉ Back to Stocks
+          GÃ¥Ã‰ Back to Stocks
         </Link>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-slate-900/70 p-10">
@@ -1275,7 +1275,7 @@ export default function StockDetailsPage() {
           href="/stocks"
           className="text-sm font-medium text-blue-400 hover:text-blue-300"
         >
-          GåÉ Back to Stocks
+          GÃ¥Ã‰ Back to Stocks
         </Link>
 
         <div className="mt-8 rounded-3xl border border-red-500/20 bg-red-950/20 p-8">
@@ -1306,7 +1306,7 @@ export default function StockDetailsPage() {
           href="/stocks"
           className="text-sm font-medium text-blue-400 hover:text-blue-300"
         >
-          GåÉ Back to Stocks
+          GÃ¥Ã‰ Back to Stocks
         </Link>
 
         <div className="flex flex-wrap gap-3">
@@ -1327,8 +1327,8 @@ export default function StockDetailsPage() {
             {watchlistLoading
               ? "Adding..."
               : watchlistAdded
-              ? "G£ô In Watchlist"
-              : "Gÿå Add to Watchlist"}
+              ? "GÂ£Ã´ In Watchlist"
+              : "GÃ¿Ã¥ Add to Watchlist"}
           </button>
 
           <button
@@ -1411,7 +1411,7 @@ export default function StockDetailsPage() {
                   ? formatPrice(
                       price
                     )
-                  : "Gé¦--"}
+                  : "GÃ©Â¦--"}
               </div>
 
               <div
@@ -1455,7 +1455,7 @@ export default function StockDetailsPage() {
               </p>
 
               <p className="mt-1 font-semibold text-blue-400">
-                GùÅ{" "}
+                GÃ¹Ã…{" "}
                 {stock.dataSource ??
                   "Market Data"}
               </p>
@@ -1519,7 +1519,7 @@ export default function StockDetailsPage() {
                 : `${intervalLabel(
                     interval
                   )} candles`}{" "}
-              GÇó{" "}
+              GÃ‡Ã³{" "}
               {candles.length} candles
               loaded
             </p>
@@ -1900,7 +1900,7 @@ export default function StockDetailsPage() {
           <div>
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-xl">
-                =ƒñû
+                =Æ’Ã±Ã»
               </div>
 
               <div>
@@ -2024,7 +2024,7 @@ export default function StockDetailsPage() {
               </div>
 
               <div className="mt-5 rounded-xl border border-yellow-500/10 bg-yellow-500/5 p-4 text-xs leading-5 text-yellow-300/80">
-                GÜá AI analysis is generated
+                GÃœÃ¡ AI analysis is generated
                 from supplied market data
                 and is intended for research
                 and educational purposes only.
@@ -2084,7 +2084,7 @@ export default function StockDetailsPage() {
       </section>
 
       <div className="mt-8 border-t border-white/5 py-6 text-center text-xs text-slate-600">
-        FinPilot AI GÇó Indian NSE &
+        FinPilot AI GÃ‡Ã³ Indian NSE &
         BSE market data
       </div>
     </PageShell>
@@ -2247,7 +2247,7 @@ function CandlestickChart({
                     fill="#64748b"
                     fontSize="12"
                   >
-                    Gé¦
+                    GÃ©Â¦
                     {tick.toLocaleString(
                       "en-IN",
                       {

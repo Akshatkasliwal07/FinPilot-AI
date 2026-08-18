@@ -41,9 +41,15 @@ export async function apiRequest<T>(
   const token = getAccessToken();
   const tokenType = getTokenType();
 
-  const requestHeaders: HeadersInit = {
+  // Use a normal string dictionary so Authorization
+  // can be added safely without TypeScript errors.
+  const requestHeaders: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(headers || {}),
+    ...(headers
+      ? Object.fromEntries(
+          new Headers(headers).entries()
+        )
+      : {}),
   };
 
   if (authenticated) {
