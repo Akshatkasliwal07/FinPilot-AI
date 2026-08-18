@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
@@ -261,7 +261,7 @@ export default function MarketHeatmap() {
           </div>
 
           <p className="mt-5 text-right text-xs text-slate-600">
-            Market data â€¢ Auto-refreshes every 5 minutes
+            Market data Ã¢â‚¬Â¢ Auto-refreshes every 5 minutes
           </p>
         </>
       )}

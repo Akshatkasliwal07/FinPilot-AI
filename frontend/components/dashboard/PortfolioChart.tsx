@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ResponsiveContainer,
@@ -161,7 +161,7 @@ export default function PortfolioChart() {
         </p>
 
         <h2 className="mt-3 text-4xl font-bold">
-          â‚¹0.00
+          Ã¢â€šÂ¹0.00
         </h2>
 
         <p className="mt-2 text-slate-500">
@@ -205,7 +205,7 @@ export default function PortfolioChart() {
           </p>
 
           <h2 className="mt-3 text-4xl font-bold">
-            â‚¹
+            Ã¢â€šÂ¹
             {summary.current_value.toLocaleString(
               "en-IN",
               {
@@ -222,8 +222,8 @@ export default function PortfolioChart() {
                 : "text-red-400"
             }`}
           >
-            {positive ? "â–²" : "â–¼"}{" "}
-            â‚¹
+            {positive ? "Ã¢â€“Â²" : "Ã¢â€“Â¼"}{" "}
+            Ã¢â€šÂ¹
             {Math.abs(
               summary.profit_loss
             ).toLocaleString(
@@ -249,7 +249,7 @@ export default function PortfolioChart() {
           </p>
 
           <h3 className="text-2xl font-bold">
-            â‚¹
+            Ã¢â€šÂ¹
             {summary.total_invested.toLocaleString(
               "en-IN",
               {
@@ -317,7 +317,7 @@ export default function PortfolioChart() {
 
             <Tooltip
               formatter={(value) =>
-                `â‚¹${Number(
+                `Ã¢â€šÂ¹${Number(
                   value
                 ).toLocaleString(
                   "en-IN"

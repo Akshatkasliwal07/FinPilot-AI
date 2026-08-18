@@ -1,6 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
   Activity,
   Bot,
@@ -78,7 +84,8 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef =
+    useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -166,9 +173,7 @@ export default function AIAssistant() {
         }
       );
 
-      const result = await readJson(
-        response
-      );
+      const result = await readJson(response);
 
       if (!response.ok) {
         throw new Error(
@@ -179,9 +184,7 @@ export default function AIAssistant() {
         );
       }
 
-      if (
-        result?.success === false
-      ) {
+      if (result?.success === false) {
         throw new Error(
           result.message ||
             result.error ||
@@ -202,19 +205,18 @@ export default function AIAssistant() {
           content: result.data!.reply,
         },
       ]);
-
     } catch (err) {
       console.error(
         "FinPilot chatbot error:",
         err
       );
 
-      const message =
+      const errorMessage =
         err instanceof Error
           ? err.message
           : "Unable to connect to FinPilot AI.";
 
-      setError(message);
+      setError(errorMessage);
 
       setMessages((previous) => [
         ...previous,
@@ -258,8 +260,8 @@ export default function AIAssistant() {
           <div className="text-right">
             <p className="font-semibold text-white">
               {candidate.price !== null
-                ? `â‚¹${candidate.price.toFixed(2)}`
-                : "â€”"}
+                ? `₹${candidate.price.toFixed(2)}`
+                : "—"}
             </p>
 
             <p
@@ -271,7 +273,7 @@ export default function AIAssistant() {
             >
               {candidate.change_percent !== null
                 ? `${candidate.change_percent >= 0 ? "+" : ""}${candidate.change_percent.toFixed(2)}%`
-                : "â€”"}
+                : "—"}
             </p>
           </div>
         </div>
@@ -285,7 +287,7 @@ export default function AIAssistant() {
             <p className="mt-1 font-semibold text-white">
               {candidate.rsi !== null
                 ? candidate.rsi.toFixed(2)
-                : "â€”"}
+                : "—"}
             </p>
           </div>
 
@@ -297,7 +299,7 @@ export default function AIAssistant() {
             <p className="mt-1 font-semibold text-white">
               {candidate.volume_ratio !== null
                 ? `${candidate.volume_ratio.toFixed(2)}x`
-                : "â€”"}
+                : "—"}
             </p>
           </div>
         </div>
@@ -310,10 +312,7 @@ export default function AIAssistant() {
               </span>
 
               <span className="text-white">
-                â‚¹
-                {candidate.entry_reference.toFixed(
-                  2
-                )}
+                ₹{candidate.entry_reference.toFixed(2)}
               </span>
             </div>
 
@@ -325,8 +324,8 @@ export default function AIAssistant() {
               <span className="text-red-300">
                 {candidate.illustrative_stop_loss !==
                 null
-                  ? `â‚¹${candidate.illustrative_stop_loss.toFixed(2)}`
-                  : "â€”"}
+                  ? `₹${candidate.illustrative_stop_loss.toFixed(2)}`
+                  : "—"}
               </span>
             </div>
 
@@ -338,8 +337,8 @@ export default function AIAssistant() {
               <span className="text-emerald-300">
                 {candidate.illustrative_target !==
                 null
-                  ? `â‚¹${candidate.illustrative_target.toFixed(2)}`
-                  : "â€”"}
+                  ? `₹${candidate.illustrative_target.toFixed(2)}`
+                  : "—"}
               </span>
             </div>
           </div>
@@ -364,6 +363,7 @@ export default function AIAssistant() {
 
             <div>
               <div className="flex items-center gap-2">
+
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">
                   FinPilot Intelligence
                 </p>
@@ -372,6 +372,7 @@ export default function AIAssistant() {
                   <Activity className="h-3 w-3" />
                   AI ONLINE
                 </span>
+
               </div>
 
               <h2 className="mt-1 text-2xl font-bold text-white">
@@ -387,6 +388,7 @@ export default function AIAssistant() {
           </div>
 
         </div>
+
       </div>
 
       {/* QUICK QUESTIONS */}
@@ -556,7 +558,7 @@ export default function AIAssistant() {
         <div className="mt-3 flex items-center justify-between text-[11px] text-slate-600">
 
           <span>
-            Enter to send Â· Shift + Enter for new line
+            Enter to send · Shift + Enter for new line
           </span>
 
           <span>

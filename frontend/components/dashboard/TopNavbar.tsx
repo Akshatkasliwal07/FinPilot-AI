@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Search,
@@ -945,7 +945,7 @@ export default function TopNavbar() {
                               text-slate-500
                             "
                           >
-                            View â†’
+                            View Ã¢â€ â€™
                           </span>
                         </button>
                       )
@@ -1135,7 +1135,7 @@ export default function TopNavbar() {
                           {formatIndexPrice(
                             nifty.price
                           )}{" "}
-                          â€¢{" "}
+                          Ã¢â‚¬Â¢{" "}
                           {(
                             nifty.change_percent ??
                             0
@@ -1193,7 +1193,7 @@ export default function TopNavbar() {
                           {formatIndexPrice(
                             sensex.price
                           )}{" "}
-                          â€¢{" "}
+                          Ã¢â‚¬Â¢{" "}
                           {(
                             sensex.change_percent ??
                             0

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -415,7 +415,7 @@ export default function StocksPage() {
                             marginTop: "6px",
                           }}
                         >
-                          â‚¹{live.price}
+                          Ã¢â€šÂ¹{live.price}
                         </div>
 
                         <div
@@ -479,7 +479,7 @@ export default function StocksPage() {
                                 marginTop: "4px",
                               }}
                             >
-                              â‚¹{value}
+                              Ã¢â€šÂ¹{value}
                             </div>
                           </div>
                         ))}
@@ -557,7 +557,7 @@ export default function StocksPage() {
                     >
                       {stock.sector ||
                         "Market"}{" "}
-                      â€¢ {stock.exchange || "NSE"}
+                      Ã¢â‚¬Â¢ {stock.exchange || "NSE"}
                     </div>
 
                     <Link
@@ -570,7 +570,7 @@ export default function StocksPage() {
                         fontSize: "13px",
                       }}
                     >
-                      View Details â†’
+                      View Details Ã¢â€ â€™
                     </Link>
                   </div>
                 </div>

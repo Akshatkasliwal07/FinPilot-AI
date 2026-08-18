@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowUpRight,
@@ -614,7 +614,7 @@ export default function Watchlist() {
                   >
                     <h3 className="font-semibold">
                       {price !== "--"
-                        ? `â‚¹${price}`
+                        ? `Ã¢â€šÂ¹${price}`
                         : "--"}
                     </h3>
 

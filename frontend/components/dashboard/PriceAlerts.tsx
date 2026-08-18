@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Bell,
@@ -631,7 +631,7 @@ export default function PriceAlerts() {
                         {" "}
 
                         <span className="font-medium text-slate-200">
-                          â‚¹
+                          Ã¢â€šÂ¹
                           {alert.target_price.toLocaleString(
                             "en-IN",
                             {

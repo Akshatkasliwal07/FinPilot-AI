@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -374,7 +374,7 @@ export default function TopMovers() {
       return "--";
     }
 
-    return `${value >= 0 ? "+" : ""}â‚¹${Math.abs(
+    return `${value >= 0 ? "+" : ""}Ã¢â€šÂ¹${Math.abs(
       value
     ).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
@@ -473,7 +473,7 @@ export default function TopMovers() {
             </p>
 
             <p className="mt-1 text-xs text-slate-600">
-              NSE â€¢ India
+              NSE Ã¢â‚¬Â¢ India
             </p>
           </div>
         </div>
@@ -543,7 +543,7 @@ export default function TopMovers() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-400">
-            Indian market â€¢ NSE
+            Indian market Ã¢â‚¬Â¢ NSE
           </p>
         </div>
 

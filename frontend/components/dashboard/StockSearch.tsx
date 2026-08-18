@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Search,
@@ -855,7 +855,7 @@ export default function StockSearch() {
           <p className="mt-1 text-xs text-slate-500">
             India
             {stock.currency
-              ? ` â€¢ ${stock.currency}`
+              ? ` Ã¢â‚¬Â¢ ${stock.currency}`
               : ""}
           </p>
         </div>
@@ -1015,7 +1015,7 @@ export default function StockSearch() {
             0 && (
             <p className="px-2 pt-2 text-xs text-slate-500">
               Click a stock to open
-              full live details â†’
+              full live details Ã¢â€ â€™
             </p>
           )}
         </div>
